@@ -33,7 +33,9 @@ if ENV['S3_ENABLED'] == 'true'
       force_path_style: true,
     }
 
-    Paperclip::Attachment.default_options[:url] = ':s3_path_url'
+    # Paperclip::Attachment.default_options[:url] = ':s3_path_url'
+    Paperclip::Attachment.default_options[:url] = ':s3_domain_url'
+    Paperclip::Attachment.default_options[:use_timestamp] = false
   end
 
   unless ENV['S3_CLOUDFRONT_HOST'].blank?
