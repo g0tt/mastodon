@@ -23,6 +23,9 @@
     = csrf_meta_tags
 
     = yield :header_tags
+    = render 'layouts/mathjax'
+    = mathjax_tag
+    = render 'layouts/highlight'
 
   - body_classes ||= @body_classes
 

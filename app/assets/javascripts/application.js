@@ -13,3 +13,4 @@
 //= require jquery2
 //= require jquery_ujs
 //= require components
+//= require highlight.pack
