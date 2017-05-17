@@ -390,6 +390,7 @@
   word-wrap: break-word;
   font-weight: 400;
   overflow: hidden;
+  overflow-x: auto;
   white-space: pre-wrap;
 
   .emojione {
@@ -487,6 +488,7 @@ a.status__content__spoiler-link {
 
     .status__content {
       color: $color1;
+      overflow-x: auto;
 
       a {
         color: $color4;
