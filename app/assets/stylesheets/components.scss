@@ -377,10 +377,12 @@
 
 .status__content {
   cursor: pointer;
+  overflow-x: auto;
 }
 
 .status__content--no-action {
   cursor: default;
+  overflow-x: auto;
 }
 
 .status__content,
@@ -934,6 +936,7 @@ a.status__content__spoiler-link {
 .display-name {
   display: block;
   max-width: 100%;
+  max-height: 50px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
