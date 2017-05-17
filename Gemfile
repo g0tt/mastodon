@@ -54,7 +54,7 @@ gem 'sidekiq'
 gem 'sidekiq-unique-jobs'
 gem 'simple-navigation'
 gem 'simple_form'
-gem 'sprockets-rails', :require => 'sprockets/railtie'
+gem 'sprockets-rails', require: 'sprockets/railtie'
 gem 'statsd-instrument'
 gem 'twitter-text'
 gem 'tzinfo-data'
@@ -63,6 +63,8 @@ gem 'whatlanguage'
 gem 'react-rails'
 gem 'browserify-rails'
 gem 'autoprefixer-rails'
+
+gem 'mathjax-rails'
 
 group :development, :test do
   gem 'rspec-rails'
