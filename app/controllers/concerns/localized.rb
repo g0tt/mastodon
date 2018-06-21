@@ -17,12 +17,26 @@ module Localized
   end
 
   def default_locale
-    ENV.fetch('DEFAULT_LOCALE') {
-      user_supplied_locale || I18n.default_locale
-    }
+    if ENV['DEFAULT_LOCALE'].present?
+      I18n.default_locale
+    else
+      request_locale || I18n.default_locale
+    end
   end
 
-  def user_supplied_locale
-    http_accept_language.language_region_compatible_from(I18n.available_locales)
+  def request_locale
+    preferred_locale || compatible_locale
+  end
+
+  def preferred_locale
+    http_accept_language.preferred_language_from(available_locales)
+  end
+
+  def compatible_locale
+    http_accept_language.compatible_language_from(available_locales)
+  end
+
+  def available_locales
+    I18n.available_locales.reverse
   end
 end

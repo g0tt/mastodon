@@ -2,17 +2,38 @@
 
 module Admin
   class ConfirmationsController < BaseController
-    before_action :set_account
+    before_action :set_user
+    before_action :check_confirmation, only: [:resend]
 
     def create
-      @account.user.confirm
+      authorize @user, :confirm?
+      @user.confirm!
+      log_action :confirm, @user
+      redirect_to admin_accounts_path
+    end
+
+    def resend
+      authorize @user, :confirm?
+
+      @user.resend_confirmation_instructions
+
+      log_action :confirm, @user
+
+      flash[:notice] = I18n.t('admin.accounts.resend_confirmation.success')
       redirect_to admin_accounts_path
     end
 
     private
 
-    def set_account
-      @account = Account.find(params[:account_id])
+    def set_user
+      @user = Account.find(params[:account_id]).user || raise(ActiveRecord::RecordNotFound)
+    end
+
+    def check_confirmation
+      if @user.confirmed?
+        flash[:error] = I18n.t('admin.accounts.resend_confirmation.already_confirmed')
+        redirect_to admin_accounts_path
+      end
     end
   end
 end

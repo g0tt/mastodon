@@ -1,11 +1,65 @@
 # frozen_string_literal: true
 
 module StreamEntriesHelper
-  EMBEDDED_CONTROLLER = 'stream_entries'.freeze
-  EMBEDDED_ACTION = 'embed'.freeze
+  EMBEDDED_CONTROLLER = 'statuses'
+  EMBEDDED_ACTION = 'embed'
 
-  def display_name(account)
-    account.display_name.presence || account.username
+  def display_name(account, **options)
+    if options[:custom_emojify]
+      Formatter.instance.format_display_name(account, options)
+    else
+      account.display_name.presence || account.username
+    end
+  end
+
+  def account_description(account)
+    prepend_str = [
+      [
+        number_to_human(account.statuses_count, strip_insignificant_zeros: true),
+        I18n.t('accounts.posts'),
+      ].join(' '),
+
+      [
+        number_to_human(account.following_count, strip_insignificant_zeros: true),
+        I18n.t('accounts.following'),
+      ].join(' '),
+
+      [
+        number_to_human(account.followers_count, strip_insignificant_zeros: true),
+        I18n.t('accounts.followers'),
+      ].join(' '),
+    ].join(', ')
+
+    [prepend_str, account.note].join(' · ')
+  end
+
+  def media_summary(status)
+    attachments = { image: 0, video: 0 }
+
+    status.media_attachments.each do |media|
+      if media.video?
+        attachments[:video] += 1
+      else
+        attachments[:image] += 1
+      end
+    end
+
+    text = attachments.to_a.reject { |_, value| value.zero? }.map { |key, value| I18n.t("statuses.attached.#{key}", count: value) }.join(' · ')
+
+    return if text.blank?
+
+    I18n.t('statuses.attached.description', attached: text)
+  end
+
+  def status_text_summary(status)
+    return if status.spoiler_text.blank?
+    I18n.t('statuses.content_warning', warning: status.spoiler_text)
+  end
+
+  def status_description(status)
+    components = [[media_summary(status), status_text_summary(status)].reject(&:blank?).join(' · ')]
+    components << status.text if status.spoiler_text.blank?
+    components.reject(&:blank?).join("\n\n")
   end
 
   def stream_link_target
@@ -47,21 +101,51 @@ module StreamEntriesHelper
     end
   end
 
-  def rtl?(text)
-    rtl_characters = /[\p{Hebrew}|\p{Arabic}|\p{Syriac}|\p{Thaana}|\p{Nko}]+/m.match(text)
+  def rtl_status?(status)
+    status.local? ? rtl?(status.text) : rtl?(strip_tags(status.text))
+  end
 
-    if rtl_characters.present?
-      total_size = text.strip.size.to_f
-      rtl_size(rtl_characters.to_a) / total_size > 0.3
+  def rtl?(text)
+    text = simplified_text(text)
+    rtl_words = text.scan(/[\p{Hebrew}\p{Arabic}\p{Syriac}\p{Thaana}\p{Nko}]+/m)
+
+    if rtl_words.present?
+      total_size = text.size.to_f
+      rtl_size(rtl_words) / total_size > 0.3
     else
       false
     end
   end
 
+  def fa_visibility_icon(status)
+    case status.visibility
+    when 'public'
+      fa_icon 'globe fw'
+    when 'unlisted'
+      fa_icon 'unlock-alt fw'
+    when 'private'
+      fa_icon 'lock fw'
+    when 'direct'
+      fa_icon 'envelope fw'
+    end
+  end
+
   private
 
-  def rtl_size(characters)
-    characters.reduce(0) { |acc, elem| acc + elem.size }.to_f
+  def simplified_text(text)
+    text.dup.tap do |new_text|
+      URI.extract(new_text).each do |url|
+        new_text.gsub!(url, '')
+      end
+
+      new_text.gsub!(Account::MENTION_RE, '')
+      new_text.gsub!(Tag::HASHTAG_RE, '')
+      new_text.gsub!(/\s+/, '')
+    end
+  end
+
+  def rtl_size(words)
+    words.reduce(0) { |acc, elem| acc + elem.size }.to_f
   end
 
   def embedded_view?
